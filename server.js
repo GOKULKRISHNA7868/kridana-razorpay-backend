@@ -7,7 +7,7 @@ const app = express();
 // ✅ Allow only your frontend domain
 app.use(
   cors({
-    origin: ["http://localhost:5178", "https://kridana.net"],
+    origin: ["http://localhost:5181", "https://kridana.net"],
   }),
 );
 
@@ -24,7 +24,8 @@ app.post("/create-order", async (req, res) => {
   try {
     const { amount } = req.body;
 
-    // ❌ Safety check
+    console.log("🔥 RECEIVED AMOUNT:", amount);
+
     if (!amount || amount <= 0) {
       return res.status(400).json({
         message: "Invalid amount",
@@ -32,28 +33,16 @@ app.post("/create-order", async (req, res) => {
     }
 
     const order = await razorpay.orders.create({
-      amount: Math.round(amount * 100), // paise
+      amount: Math.round(amount), // ✅ paise
       currency: "INR",
       receipt: "receipt_" + Date.now(),
-      payment_capture: 1,
-
-      // 🔥 DIRECT TRANSFER (ROUTE)
-      transfers: [
-        {
-          account: "acc_STXnD50Il40xnP", // make sure this is LIVE account
-          amount: Math.round(amount * 100),
-          currency: "INR",
-          on_hold: false,
-        },
-      ],
     });
 
-    console.log("✅ ORDER CREATED:", order.id);
+    console.log("✅ ORDER CREATED:", order.amount);
 
     res.json(order);
   } catch (err) {
     console.error("❌ CREATE ORDER ERROR:", err);
-
     res.status(500).json({
       message: err?.error?.description || err.message || "Server error",
     });
